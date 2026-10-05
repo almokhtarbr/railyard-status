@@ -1,3 +1,102 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><title>Railyard Status</title></head>
-<body><p>Placeholder — populated by railyard-app's status-check workflow.</p></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Railyard status</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 640px; margin: 0 auto; padding: 2rem 1.25rem 4rem; background: #fff; color: #1a1a1a; }
+  @media (prefers-color-scheme: dark) { body { background: #0f0f10; color: #e8e8e8; } }
+  h1 { font-size: 1.25rem; margin: 0 0 1.5rem; }
+  .banner { display: flex; align-items: center; gap: .6rem; padding: 1rem 1.1rem; border-radius: 10px; font-weight: 600; margin-bottom: 1.5rem; }
+  .dot { width: .65rem; height: .65rem; border-radius: 50%; flex: none; }
+  .state-operational .dot, .state-operational { color: #116329; }
+  .state-operational { background: #dafbe1; }
+  .state-operational .dot { background: #1a7f37; }
+  .state-degraded .dot, .state-degraded { color: #7d4e00; }
+  .state-degraded { background: #fff3cc; }
+  .state-degraded .dot { background: #bf8700; }
+  .state-down .dot, .state-down { color: #86181d; }
+  .state-down { background: #ffe3e3; }
+  .state-down .dot { background: #cf222e; }
+  .state-unknown .dot, .state-unknown { color: #57606a; }
+  .state-unknown { background: #f1f2f4; }
+  .state-unknown .dot { background: #8c959f; }
+  @media (prefers-color-scheme: dark) {
+    .state-operational { background: #0f2c1c; color: #5fd587; }
+    .state-degraded { background: #332700; color: #f0b429; }
+    .state-down { background: #330d0f; color: #ff8085; }
+    .state-unknown { background: #1c1c1e; color: #9aa1a9; }
+  }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+  td { padding: .6rem 0; border-bottom: 1px solid rgba(127,127,127,.25); vertical-align: top; }
+  td.target { font-weight: 500; }
+  td.uptime { text-align: right; color: #666; font-variant-numeric: tabular-nums; }
+  .pill { display: inline-flex; align-items: center; gap: .4rem; padding: .15rem .55rem; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+  h2 { font-size: 1rem; margin: 2rem 0 .75rem; }
+  .incident { padding: .9rem 0; border-bottom: 1px solid rgba(127,127,127,.25); }
+  .incident:last-child { border-bottom: none; }
+  .incident .meta { font-size: .8rem; color: #666; margin-bottom: .25rem; }
+  .incident .title { font-weight: 600; }
+  .incident .body { margin-top: .35rem; font-size: .92rem; }
+  .empty { color: #666; font-size: .92rem; }
+  footer { margin-top: 2.5rem; font-size: .82rem; color: #666; }
+  #checked-at.stale { color: #bf8700; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Railyard status</h1>
+
+<div class="banner state-operational">
+  <span class="dot" aria-hidden="true"></span>
+  <span>
+    All systems operational
+  </span>
+</div>
+
+<table>
+    <tr>
+    <td class="target">Railyard app (app.railyard.run)</td>
+    <td><span class="pill state-operational"><span class="dot" aria-hidden="true"></span>operational</span></td>
+    <td class="uptime">100.0% / 90d</td>
+  </tr>
+    <tr>
+    <td class="target">Marketing website (railyard.run)</td>
+    <td><span class="pill state-operational"><span class="dot" aria-hidden="true"></span>operational</span></td>
+    <td class="uptime">100.0% / 90d</td>
+  </tr>
+  </table>
+
+<h2>Incidents</h2>
+<p class="empty">No incidents on record.</p>
+
+<footer>
+  <span id="checked-at" data-checked-at="2026-10-05T02:40:35Z" data-stale-threshold-minutes="15">
+    Last checked at 2026-10-05T02:40:35Z  </span>
+  <noscript> (shown in UTC; enable JavaScript to see how long ago that was)</noscript>
+  <p>Checked every few minutes by a GitHub Actions workflow independent of Railyard's own servers. Incidents below this line that aren't caught automatically are added by hand.</p>
+</footer>
+
+<script>
+(function () {
+  var el = document.getElementById("checked-at");
+  var iso = el.getAttribute("data-checked-at");
+  if (!iso) return;
+  var staleMinutes = parseInt(el.getAttribute("data-stale-threshold-minutes"), 10) || 15;
+  var checked = new Date(iso);
+  var ageMinutes = (Date.now() - checked.getTime()) / 60000;
+  var relative;
+  if (ageMinutes < 1) relative = "less than a minute ago";
+  else if (ageMinutes < 60) relative = Math.round(ageMinutes) + " minute(s) ago";
+  else if (ageMinutes < 1440) relative = Math.round(ageMinutes / 60) + " hour(s) ago";
+  else relative = Math.round(ageMinutes / 1440) + " day(s) ago";
+  el.textContent = "Last checked at " + iso + " (" + relative + ")";
+  if (ageMinutes > staleMinutes) {
+    el.classList.add("stale");
+    el.textContent += " — stale: the check hasn't run recently, so current status above may be out of date";
+  }
+})();
+</script>
+</body>
+</html>
