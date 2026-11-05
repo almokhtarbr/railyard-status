@@ -1,3 +1,7 @@
-# railyard-status
+# Railyard status
 
-Static Pages site for Railyard's status page. Published by the `status-check` workflow in the `railyard-app` repo — this repo only holds the generated output, so the page stays up even if Railyard's own EC2 box is down. Do not edit `index.html` here by hand; it is overwritten on every check.
+https://almokhtarbr.github.io/railyard-status/
+
+A static page. It checks app.railyard.run/up and railyard.run live from the visitor's browser every minute, so it is never stale, and draws 90-day uptime from https://app.railyard.run/uptime, which Railyard records every 5 minutes (a missed check counts as downtime).
+
+Source: status/live/index.html in almokhtarbr/railyard-app. Nothing here needs GitHub Actions.
