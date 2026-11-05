@@ -4,98 +4,126 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Railyard status</title>
+<meta name="description" content="Live status of app.railyard.run and railyard.run, checked from your browser, with 90-day uptime.">
 <style>
-  :root { color-scheme: light dark; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 640px; margin: 0 auto; padding: 2rem 1.25rem 4rem; background: #fff; color: #1a1a1a; }
-  @media (prefers-color-scheme: dark) { body { background: #0f0f10; color: #e8e8e8; } }
+  :root { color-scheme: light dark; --bg: #fff; --fg: #1a1a1a; --muted: #666; --line: rgba(127,127,127,.25); --bar-ok: #1a7f37; --bar-bad: #cf222e; --bar-part: #bf8700; --bar-none: rgba(127,127,127,.25); }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0f0f10; --fg: #e8e8e8; --muted: #9aa1a9; } }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 680px; margin: 0 auto; padding: 2rem 16px 4rem; background: var(--bg); color: var(--fg); }
   h1 { font-size: 1.25rem; margin: 0 0 1.5rem; }
   .banner { display: flex; align-items: center; gap: .6rem; padding: 1rem 1.1rem; border-radius: 10px; font-weight: 600; margin-bottom: 1.5rem; }
   .dot { width: .65rem; height: .65rem; border-radius: 50%; flex: none; }
-  .state-operational .dot, .state-operational { color: #116329; }
-  .state-operational { background: #dafbe1; }
-  .state-operational .dot { background: #1a7f37; }
-  .state-degraded .dot, .state-degraded { color: #7d4e00; }
-  .state-degraded { background: #fff3cc; }
-  .state-degraded .dot { background: #bf8700; }
-  .state-down .dot, .state-down { color: #86181d; }
-  .state-down { background: #ffe3e3; }
-  .state-down .dot { background: #cf222e; }
-  .state-unknown .dot, .state-unknown { color: #57606a; }
-  .state-unknown { background: #f1f2f4; }
-  .state-unknown .dot { background: #8c959f; }
+  .state-operational { background: #dafbe1; color: #116329; } .state-operational .dot { background: #1a7f37; }
+  .state-degraded { background: #fff3cc; color: #7d4e00; } .state-degraded .dot { background: #bf8700; }
+  .state-down { background: #ffe3e3; color: #86181d; } .state-down .dot { background: #cf222e; }
+  .state-unknown { background: #f1f2f4; color: #57606a; } .state-unknown .dot { background: #8c959f; }
   @media (prefers-color-scheme: dark) {
-    .state-operational { background: #0f2c1c; color: #5fd587; }
-    .state-degraded { background: #332700; color: #f0b429; }
-    .state-down { background: #330d0f; color: #ff8085; }
-    .state-unknown { background: #1c1c1e; color: #9aa1a9; }
+    .state-operational { background: #0f2c1c; color: #5fd587; } .state-degraded { background: #332700; color: #f0b429; }
+    .state-down { background: #330d0f; color: #ff8085; } .state-unknown { background: #1c1c1e; color: #9aa1a9; }
   }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
-  td { padding: .6rem 0; border-bottom: 1px solid rgba(127,127,127,.25); vertical-align: top; }
-  td.target { font-weight: 500; }
-  td.uptime { text-align: right; color: #666; font-variant-numeric: tabular-nums; }
+  .target { padding: .9rem 0; border-bottom: 1px solid var(--line); }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; }
+  .name { font-weight: 500; }
   .pill { display: inline-flex; align-items: center; gap: .4rem; padding: .15rem .55rem; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+  .uptime { color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .bars { display: flex; gap: 2px; height: 28px; margin-top: .6rem; }
+  .bars span { flex: 1; border-radius: 2px; background: var(--bar-none); min-width: 2px; }
+  .bars span.ok { background: var(--bar-ok); } .bars span.part { background: var(--bar-part); } .bars span.bad { background: var(--bar-bad); }
+  .scale { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: .25rem; }
   h2 { font-size: 1rem; margin: 2rem 0 .75rem; }
-  .incident { padding: .9rem 0; border-bottom: 1px solid rgba(127,127,127,.25); }
-  .incident:last-child { border-bottom: none; }
-  .incident .meta { font-size: .8rem; color: #666; margin-bottom: .25rem; }
-  .incident .title { font-weight: 600; }
-  .incident .body { margin-top: .35rem; font-size: .92rem; }
-  .empty { color: #666; font-size: .92rem; }
-  footer { margin-top: 2.5rem; font-size: .82rem; color: #666; }
-  #checked-at.stale { color: #bf8700; font-weight: 600; }
+  .empty, footer, .note { color: var(--muted); font-size: .88rem; }
+  footer { margin-top: 2.5rem; line-height: 1.5; }
 </style>
 </head>
 <body>
 <h1>Railyard status</h1>
-
-<div class="banner state-operational">
-  <span class="dot" aria-hidden="true"></span>
-  <span>
-    All systems operational
-  </span>
-</div>
-
-<table>
-    <tr>
-    <td class="target">Railyard app (app.railyard.run)</td>
-    <td><span class="pill state-operational"><span class="dot" aria-hidden="true"></span>operational</span></td>
-    <td class="uptime">100.0% / 90d</td>
-  </tr>
-    <tr>
-    <td class="target">Marketing website (railyard.run)</td>
-    <td><span class="pill state-operational"><span class="dot" aria-hidden="true"></span>operational</span></td>
-    <td class="uptime">100.0% / 90d</td>
-  </tr>
-  </table>
-
+<div id="banner" class="banner state-unknown"><span class="dot" aria-hidden="true"></span><span id="banner-text">Checking…</span></div>
+<div id="targets"></div>
 <h2>Incidents</h2>
 <p class="empty">No incidents on record.</p>
-
 <footer>
-  <span id="checked-at" data-checked-at="2026-11-05T17:31:59Z" data-stale-threshold-minutes="15">
-    Last checked at 2026-11-05T17:31:59Z  </span>
-  <noscript> (shown in UTC; enable JavaScript to see how long ago that was)</noscript>
-  <p>Checked every few minutes by a GitHub Actions workflow independent of Railyard's own servers. Incidents below this line that aren't caught automatically are added by hand.</p>
+  <div id="checked">Checking both sites from your browser now.</div>
+  <div>Status is checked live from your browser every minute, so this page is never out of date. Uptime comes from a check Railyard records every 5 minutes; a missed check counts as downtime.</div>
+  <noscript>This page needs JavaScript to check the sites live. You can also open <a href="https://app.railyard.run/up">app.railyard.run/up</a> directly.</noscript>
 </footer>
-
 <script>
 (function () {
-  var el = document.getElementById("checked-at");
-  var iso = el.getAttribute("data-checked-at");
-  if (!iso) return;
-  var staleMinutes = parseInt(el.getAttribute("data-stale-threshold-minutes"), 10) || 15;
-  var checked = new Date(iso);
-  var ageMinutes = (Date.now() - checked.getTime()) / 60000;
-  var relative;
-  if (ageMinutes < 1) relative = "less than a minute ago";
-  else if (ageMinutes < 60) relative = Math.round(ageMinutes) + " minute(s) ago";
-  else if (ageMinutes < 1440) relative = Math.round(ageMinutes / 60) + " hour(s) ago";
-  else relative = Math.round(ageMinutes / 1440) + " day(s) ago";
-  el.textContent = "Last checked at " + iso + " (" + relative + ")";
-  if (ageMinutes > staleMinutes) {
-    el.classList.add("stale");
-    el.textContent += " — stale: the check hasn't run recently, so current status above may be out of date";
+  var TARGETS = [
+    { key: "app", label: "Railyard app (app.railyard.run)", url: "https://app.railyard.run/up", readable: true },
+    { key: "website", label: "Marketing website (railyard.run)", url: "https://railyard.run/", readable: false }
+  ];
+  var UPTIME_URL = "https://app.railyard.run/uptime";
+  var live = {};
+  var history = null;
+
+  function timeout(ms) {
+    if (window.AbortController) { var c = new AbortController(); setTimeout(function () { c.abort(); }, ms); return c.signal; }
+    return undefined;
   }
+
+  function probe(t) {
+    var url = t.url + (t.url.indexOf("?") < 0 ? "?" : "&") + "t=" + Date.now();
+    var options = { cache: "no-store", signal: timeout(8000) };
+    if (!t.readable) options.mode = "no-cors";
+    return fetch(url, options).then(function (r) { return t.readable ? r.status < 500 : true; }).catch(function () { return false; });
+  }
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  function render() {
+    var box = document.getElementById("targets");
+    box.textContent = "";
+    var states = TARGETS.map(function (t) { return live[t.key]; });
+    TARGETS.forEach(function (t) {
+      var state = live[t.key] == null ? "unknown" : (live[t.key] ? "operational" : "down");
+      var wrap = el("div", "target");
+      var row = el("div", "row");
+      row.appendChild(el("span", "name", t.label));
+      var right = el("span", "row");
+      var h = history && history.targets && history.targets[t.key];
+      if (h && h.uptime != null) right.appendChild(el("span", "uptime", (h.uptime * 100).toFixed(2) + "% over " + h.days.length + " day" + (h.days.length === 1 ? "" : "s")));
+      var pill = el("span", "pill state-" + state); pill.appendChild(el("span", "dot")); pill.appendChild(document.createTextNode(state === "unknown" ? "checking" : state));
+      right.appendChild(pill);
+      row.appendChild(right);
+      wrap.appendChild(row);
+      if (h && h.days && h.days.length) {
+        var bars = el("div", "bars");
+        h.days.forEach(function (d) {
+          var b = el("span", d.uptime >= 0.999 ? "ok" : d.uptime >= 0.95 ? "part" : "bad");
+          b.title = d.day + ": " + (d.uptime * 100).toFixed(2) + "%";
+          bars.appendChild(b);
+        });
+        wrap.appendChild(bars);
+        var scale = el("div", "scale"); scale.appendChild(el("span", null, h.days[0].day)); scale.appendChild(el("span", null, "today")); wrap.appendChild(scale);
+      } else if (history === false) {
+        wrap.appendChild(el("div", "note", "Uptime history is unavailable while app.railyard.run is unreachable."));
+      }
+      box.appendChild(wrap);
+    });
+    var banner = document.getElementById("banner");
+    var down = states.filter(function (s) { return s === false; }).length;
+    var known = states.every(function (s) { return s != null; });
+    var state = !known ? "unknown" : down === 0 ? "operational" : down === states.length ? "down" : "degraded";
+    banner.className = "banner state-" + state;
+    document.getElementById("banner-text").textContent = { operational: "All systems operational", degraded: "Partial outage", down: "Major outage", unknown: "Checking…" }[state];
+  }
+
+  function loadHistory() {
+    return fetch(UPTIME_URL + "?t=" + Date.now(), { cache: "no-store", signal: timeout(8000) })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(function (data) { history = data; }).catch(function () { history = false; });
+  }
+
+  function check() {
+    return Promise.all(TARGETS.map(function (t) { return probe(t).then(function (up) { live[t.key] = up; }); })).then(function () {
+      document.getElementById("checked").textContent = "Checked live from your browser at " + new Date().toLocaleTimeString() + ". Next check in a minute.";
+      render();
+    });
+  }
+
+  render();
+  Promise.all([check(), loadHistory()]).then(render);
+  setInterval(check, 60000);
+  setInterval(function () { loadHistory().then(render); }, 300000);
 })();
 </script>
 </body>
